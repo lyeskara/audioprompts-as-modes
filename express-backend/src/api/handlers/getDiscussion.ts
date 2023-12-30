@@ -6,6 +6,7 @@ import Discussion from '../models/discussion.js';
 export default async function getDiscussion(req: Request, res: Response) {
     const modeName = req.params.mode;
     const mode = await Mode.findOne({ name: modeName });
+    
     if (!mode) {
         return res.status(404).send('Mode not found');
     }

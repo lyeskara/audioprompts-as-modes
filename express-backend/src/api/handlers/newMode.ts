@@ -15,9 +15,11 @@ export default async function newMode(req: Request, res: Response) {
             mode = new Mode(newmode);
             await mode.save();
             res.send(mode);
+        } else {
+            res.status(400).send("mode exist already!")
         }
     } catch (error) {
-        res.status(400).send(error);
+        res.status(500).send(error);
     }
 }
 

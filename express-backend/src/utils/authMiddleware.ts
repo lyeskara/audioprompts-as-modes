@@ -6,6 +6,6 @@ export default function authMiddleware(req: Request, res: Response, next: NextFu
     if (token === process.env.Secret_Auth_Token) {
       next(); // Continue to the next middleware or route handler
     } else {
-      res.status(403).json({ error: 'Forbidden: Invalid token' });
+      res.status(401).json({ error: 'Forbidden: Invalid token' });
     }
   }

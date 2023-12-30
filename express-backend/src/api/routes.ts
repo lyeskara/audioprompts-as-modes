@@ -1,12 +1,12 @@
 import { Express } from "express";
 
-import getModes from "./controllers/getModes.js";
-import newMode from "./controllers/newMode.js";
-import getDiscussion from "./controllers/getDiscussion.js";
-import userprompt from "./controllers/userprompt.js";
-import storeDiscussion from "./controllers/storeDiscussion.js";
-import validate from "./controllers/validate.js";
-import convertToPrompt from './controllers/convertToPrompt.js'
+import getModes from "./handlers/getModes.js";
+import newMode from "./handlers/newMode.js";
+import getDiscussion from "./handlers/getDiscussion.js";
+import userprompt from "./handlers/userprompt.js";
+import storeDiscussion from "./handlers/storeDiscussion.js";
+import validate from "./handlers/validate.js";
+import convertToPrompt from './handlers/convertToPrompt.js'
 export default function routes(app: Express) {
     // http GETs
     app.get('/getModes', getModes);

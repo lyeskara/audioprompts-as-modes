@@ -1,9 +1,0 @@
-add ejs
-
-add 3 endpoints 
-
-make handlers work
-
-add edge case handeling
-
-dockerize and deploy

@@ -15,7 +15,8 @@ app.use(authMiddleware)
 connectDB()
     .then(() => {
         console.log("Connected to the database")
-    }).catch((err) => {
+    })
+    .catch((err) => {
         console.error(err)
     })
 
@@ -25,7 +26,7 @@ const PORT = process.env.PORT || 3000;
 routes(app)
 
 app.listen(PORT, () => {
-    console.log(`Server is running on redoaune  ${PORT}`);
+    console.log(`Server is running on ${PORT}`);
 });
 
 

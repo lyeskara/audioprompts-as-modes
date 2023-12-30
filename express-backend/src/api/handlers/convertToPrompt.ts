@@ -1,12 +1,13 @@
 import { Request, Response } from 'express';
-import {videoToSummary} from "../../utils/videoToSummary.js"
+import videoToPrompt from "../../utils/videoToPrompt.js"
 
 export default async function userprompt(req: Request, res: Response) {
-    const url: string = req.params.url
-    
+    const url: string = req.body.url
+    console.log(req.body)
+
     try {
         // Call the API with the current conversation
-        const prompt = await videoToSummary(url)
+        const prompt = await videoToPrompt(url)
         res.status(201).send(prompt)
 
     } catch (error) {
