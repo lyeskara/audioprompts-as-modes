@@ -1,5 +1,7 @@
 const readlineSync = require('readline-sync');
 const axios = require('axios');
+const axiosRetry = require('axios-retry').default;
+
 require('dotenv').config()
 
 let conversation = [];
@@ -7,6 +9,9 @@ const api_url = process.env.API_URL;
 
 let selectedMode;
 let password;
+const Axios = axios.create();
+
+axiosRetry(Axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 
 async function talkWithGPT() {
     let input = '';
@@ -15,10 +20,11 @@ async function talkWithGPT() {
         if (input !== 'exit') {
             try {
                 conversation.push({ role: "user", content: input });
-                const res = await axios.post(`${api_url}/userprompt`, { conversation, password: password });
+                const res = await Axios.post(`${api_url}/userprompt`, { conversation, password: password });
                 console.log("GPT: ", res.data);
                 conversation.push({ role: "assistant", content: res.data });
             } catch (error) {
+                
                 console.error("Error communicating with GPT:", error.message);
             }
         }
@@ -26,70 +32,17 @@ async function talkWithGPT() {
     console.log("Exiting...");
     try {
         if (selectedMode !== undefined) {
-            await axios.post(`${api_url}/storeDiscussion`, { mode: selectedMode, discussion: conversation, password: password });
+            await Axios.post(`${api_url}/storeDiscussion`, { mode: selectedMode, discussion: conversation, password: password });
         }
     } catch (error) {
         console.error("Error storing discussion:", error.message);
     }
 }
 
-async function selectMode() {
-    while (true) {
-        const selectMode = readlineSync.question("Do you want to select a mode? (y/no/exit): ");
-
-        if (selectMode === 'exit') {
-            console.log("Exiting...");
-            return;
-        }
-
-        switch (selectMode) {
-            case 'no':
-                console.log("Vanilla GPT activated.");
-                return await talkWithGPT();
-            case 'y':
-                await createOrSelectMode();
-                break;
-            default:
-                console.log("Invalid option. Please try again.");
-        }
-    }
-}
-
-async function createOrSelectMode() {
-    while (true) {
-        const newMode = readlineSync.question("Want to create a new mode? (y/no/back): ");
-        switch (newMode) {
-            case 'back':
-                return;
-            case 'y':
-                await createNewMode();
-                break;
-            case 'no':
-                await selectExistingMode();
-                break;
-            default:
-                console.log("Invalid option. Please try again.");
-        }
-    }
-}
-
-async function createNewMode() {
-    selectedMode = readlineSync.question("Enter the name of the mode: ");
-    const description = readlineSync.question("Enter the context of the query: ");
-
-    conversation.push({ role: "user", content: description });
-    try {
-        await axios.post(`${api_url}/newmode`, { mode: { name: selectedMode, description: description }, password: password });
-        await talkWithGPT();
-    } catch (error) {
-        console.error("Error creating mode:", error.message);
-    }
-}
-
 async function selectExistingMode() {
     while (true) { // Keep asking until a valid mode is selected or the user types 'back'
         try {
-            const response = await axios.get(`${api_url}/getModes?password=${password}`);
+            const response = await Axios.get(`${api_url}/getModes?password=${password}`);
             const data = response.data
             const modes = new Map(data);
             console.log("Available modes:", Array.from(modes.keys()));
@@ -99,7 +52,7 @@ async function selectExistingMode() {
                 const discussionType = readlineSync.question("Do you want to create a new discussion? (y/no): ");
                 if (discussionType === 'no') {
                     try {
-                        const response = await axios.get(`${api_url}/${selectedMode}/getdiscussion?password=${password}`);
+                        const response = await Axios.get(`${api_url}/${selectedMode}/getdiscussion?password=${password}`);
                         const previousMessages = response.data;
                         conversation.push(...previousMessages);
                         await talkWithGPT();
@@ -131,10 +84,93 @@ async function selectExistingMode() {
     }
 }
 
+async function createManuallyNewMode() {
+    selectedMode = readlineSync.question("Enter the name of the mode: ");
+    const description = readlineSync.question("Enter the context of the query: ");
+    const prompt = `Whatever is presented here is a prompt use it as context for later questions, here is the content for context of later discussions: ${description}`
+    conversation.push({ role: "user", content: prompt });
+    try {
+        await Axios.post(`${api_url}/newmode`, { mode: { name: selectedMode, description: description }, password: password });
+        await talkWithGPT();
+    } catch (error) {
+        console.error("Error creating mode:", error.message);
+    }
+}
+
+async function createPrompt() {
+    selectedMode = readlineSync.question("Enter the name of the mode of this video url: ");
+    const youtubeURL = readlineSync.question("Enter a YouTube URL: ");
+    try {
+            const response = await Axios.post(`${api_url}/convertToPrompt`, { password: password , url: youtubeURL},  { headers: { 'Content-Type': 'application/json' } });
+            const prompt = `Whatever is presented here is a prompt use it as context for later questions, here is the content for context of later discussions: ${response.data}`
+            conversation.push({ role: "user", content: prompt });
+            await Axios.post(`${api_url}/newmode`, { mode: { name: selectedMode, description: prompt }, password: password });
+            await talkWithGPT();
+    } catch (error) {
+        console.error("Error creating youtube Prompt:", error.message);
+    }
+}
+
+async function createNewMode() {
+    const createFromYoutube = readlineSync.question("Want to create a new mode with youtube url or manually set one? (y/no): ");
+    switch (createFromYoutube) {
+        case "y":
+            await createPrompt()
+            break;
+        case "no":
+            await createManuallyNewMode();
+            break;
+        default:
+            console.log("Invalid option. Please try again.");
+
+    }
+}
+
+async function createOrSelectMode() {
+    while (true) {
+        const newMode = readlineSync.question("Want to create a new mode? (y/no/back): ");
+        switch (newMode) {
+            case 'back':
+                return;
+            case 'y':
+                await createNewMode();
+                break;
+            case 'no':
+                await selectExistingMode();
+                break;
+            default:
+                console.log("Invalid option. Please try again.");
+        }
+    }
+}
+
+async function selectMode() {
+    while (true) {
+        const selectMode = readlineSync.question("Do you want to select a mode? (y/no/exit): ");
+
+        if (selectMode === 'exit') {
+            console.log("Exiting...");
+            return;
+        }
+
+        switch (selectMode) {
+            case 'no':
+                console.log("Vanilla GPT activated.");
+                return await talkWithGPT();
+            case 'y':
+                await createOrSelectMode();
+                break;
+            default:
+                console.log("Invalid option. Please try again.");
+        }
+    }
+}
+
+
 async function authenticate() {
     password = readlineSync.question("Enter the access password: ", { hideEchoBack: true });
     try {
-        await axios.post(`${api_url}/validate`, { password: password });
+        await Axios.post(`${api_url}/validate`, { password: password });
         return true;
     } catch (err) {
         console.error("Authentication failed:", err.message);
@@ -147,7 +183,7 @@ async function main() {
 
     let authorized = false;
     while (!authorized) {
-        authorized = await authenticate();
+        authorized = await authenticate()
 
         if (authorized) {
             await selectMode();
