@@ -12,6 +12,9 @@ services:
       - DB_HOST=mongo
     depends_on:
       - mongo
+    volumes:
+      - /usr/bin/ffmpeg:/usr/bin/ffmpeg   
+      - music:/home/music 
 
   mongo:
     image: "mongo:latest"
@@ -20,7 +23,9 @@ services:
     volumes:
       - mongodb_data:/data/db
 
+
 volumes:
   mongodb_data:
      driver: local
+  music:
  
