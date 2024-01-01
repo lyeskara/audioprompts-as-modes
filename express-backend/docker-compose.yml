@@ -14,7 +14,7 @@ services:
       - mongo
     volumes:
       - /usr/bin/ffmpeg:/usr/bin/ffmpeg   
-      - music:/home/music 
+      - music:/app/music 
 
   mongo:
     image: "mongo:latest"
