@@ -1,13 +1,14 @@
 version: '3'
 
 services:
-  api:
+  express-server:
     build: .
+    container_name: express-server
     ports:
       - "3000:3000"
     environment:
-      - OPENAI_API_KEY=randomherenotrealkey
-      - Secret_Auth_Token=randomherenotrealkey
+      - OPENAI_API_KEY=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
+      - Secret_Auth_Token=lyes
       - DB_HOST=mongo
     depends_on:
       - mongo
@@ -22,3 +23,4 @@ services:
 volumes:
   mongodb_data:
      driver: local
+ 
