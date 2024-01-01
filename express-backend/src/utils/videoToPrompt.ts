@@ -11,7 +11,7 @@ export default async function videoToPrompt(urlstring: string): Promise<string> 
     const videoID = getYouTubeVideoID(urlstring)
     const videoTitle = await getYouTubeVideoTitle(videoID)
 
-    const outputFile = `/home/music/${videoTitle}.mp3`
+    const outputFile = `/app/music/${videoTitle}.mp3`
 
     const videoReadableStream = ytdl(urlstring, {
         filter: 'audioonly',
