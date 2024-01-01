@@ -13,8 +13,7 @@ services:
     depends_on:
       - mongo
     volumes:
-      - /usr/bin/ffmpeg:/usr/bin/ffmpeg   
-      - music:/app/music 
+      - ./app/music:/app/music 
 
   mongo:
     image: "mongo:latest"
