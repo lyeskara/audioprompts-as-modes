@@ -7,7 +7,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - OPENAI_API_KEY=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
+      - OPENAI_API_KEY=put your own api key
       - Secret_Auth_Token=lyes
       - DB_HOST=mongo
     depends_on:
